@@ -73,7 +73,7 @@ for region in ${aws_regions}; do
 
 	${desc_instances} --hide-tags --show-empty-fields --url https://${region} |grep -e ^INSTANCE > ${cache_file}.tmp
 	if [ $? -eq 0 ]; then
-		cat ${cache_file}.tmp | awk '{print "InstanceID="$2 " State="$6 " SecGrp="$7 " Type="$10 " AZ="$12 " PubIP="$17 "PrivIP="$18 " VpcID="$19 " SubnetID="$20}' | sort -d -f > ${cache_file}
+		cat ${cache_file}.tmp | awk '{print "InstanceID="$2 " State="$6 " SecGrp="$7 " Type="$10 " AZ="$12 " PubIP="$17 " PrivIP="$18 " VpcID="$19 " SubnetID="$20}' | sort -d -f > ${cache_file}
 		diff ${cache_file} ${cache_file}.last | sed 's|<|Conf=current|g' | sed 's|>|Conf=previus|g' | grep -E "^Conf=current" > ${cache_file}.msg
 		while read -r line
 		do
