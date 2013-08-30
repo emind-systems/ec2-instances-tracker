@@ -10,30 +10,39 @@
 # You should have received a copy of the GNU General Public License along with Emind Systems DevOps Tool set. If not, see http://www.gnu.org/licenses/.
 
 pid_file=/var/run/ec2-instances-tracker.pid
+inventory_file=""
 export JAVA_HOME=/usr/lib/jvm/jre
 export EC2_HOME=/opt/aws/apitools/ec2
 
 function usage () {
-    echo "Usage: $0 -O <aim-key> -W <aws-secret> [-r all|<region-url>]"
+    echo "Usage: $0 -O <aim-key> -W <aws-secret> [-i <path to save inventory-file>]"
 }
 
-while getopts O:W:rh flag; do
+function get_name_by_instanceid () {
+	local id=$1
+	name=$(grep $id ${cache_file}.tmp.names | awk '{print $5 " " $6 " " $7}'| sed -e 's/^ *//g' -e 's/ *$//g')
+}
+
+while getopts O:W:i:h flag; do
 	case $flag in
 	O)
-	key=$OPTARG;
+		key=$OPTARG;
 	;;
 	W)
-	secret=$OPTARG;
+		secret=$OPTARG;
 	;;
-	r)
-	region_option=$OPTARG;
+	i)
+		inventory_file=$OPTARG.csv;
+		rm -f $inventory_file;
 	;;
 	h)
-	usage;
+		usage;
 	exit;
 	;;
   esac
 done
+
+rm -f $inventory_file
 
 if [ "x${key}" = "x" ] || [ "x${secret}" = "x" ]; then
 	usage;
@@ -55,11 +64,7 @@ fi
 desc_instances="/opt/aws/bin/ec2-describe-instances -O ${key} -W ${secret}"
 desc_reg_cmd="/opt/aws/bin/ec2-describe-regions -O ${key} -W ${secret}"
 
-if [ "${region_option}" = "all" ] || [ "${region_option}" = "" ]; then
-    aws_regions=$(${desc_reg_cmd} |awk '{print $3}')
-elif [ "${region_option}" != "" ]; then
-    aws_regions=${region_option}
-fi
+aws_regions=$(${desc_reg_cmd} |awk '{print $3}')
 
 for region in ${aws_regions}; do
 	cache_file=/tmp/ec2-instances-tracker.${region}
@@ -72,6 +77,7 @@ for region in ${aws_regions}; do
 	fi
 
 	${desc_instances} --hide-tags --show-empty-fields --url https://${region} |grep -e ^INSTANCE > ${cache_file}.tmp
+
 	if [ $? -eq 0 ]; then
 		cat ${cache_file}.tmp | awk '{print "InstanceID="$2 " State="$6 " SecGrp="$7 " Type="$10 " AZ="$12 " PubIP="$17 " PrivIP="$18 " VpcID="$19 " SubnetID="$20}' | sort -d -f > ${cache_file}
 		diff ${cache_file} ${cache_file}.last | sed 's|<|Conf=current|g' | sed 's|>|Conf=previus|g' | grep -E "^Conf=current" > ${cache_file}.msg
@@ -79,7 +85,20 @@ for region in ${aws_regions}; do
 		do
 			logger -s -t ec2-instances-tracker "Region=${region} $line"
 		done < ${cache_file}.msg
+
+		# Inventory tool
+		if [ "$inventory_file" != "" ]; then
+			${desc_instances} --show-empty-fields --url https://${region} |grep ^TAG |grep -e '\sName\s' > ${cache_file}.tmp.names
+			cat ${cache_file}.tmp | awk '{print $2 "," $10 "," $12}' | sort -d -f > ${cache_file}.inventory
+			cat ${cache_file}.inventory | while read line
+			do
+				my_instance_id=$(echo $line | awk -F',' '{print $1}')
+				get_name_by_instanceid $my_instance_id
+				echo "$name,$line" >> $inventory_file
+			done
+		fi
 	fi
+
 done
 
 logger -s -t ec2-instances-tracker "End pid=$$"
