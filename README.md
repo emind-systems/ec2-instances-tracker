@@ -6,6 +6,10 @@ A script that monitors EC2 instances changes and write the chnages to Syslog
 Usage:
 
         Usage: ./ec2-instances-tracker.sh -O <aim-key> -W <aws-secret> [-i <path to save inventory-file> -m <e-mail address to send the inventory file to>]
+	
+In crontab:
+
+	0 13 * * * /path/to/ec2-instances-tracker/ec2-instances-tracker.sh -O <aim-key> -W <aws-secret> -i /tmp/$(date +\%Y-\%M-\%d_\%H-\%M-\%S) -m "user@mail.com user2@mail.com"
 
 Output:
 
