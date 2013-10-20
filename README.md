@@ -5,7 +5,7 @@ A script that monitors EC2 instances changes and write the chnages to Syslog
 
 Usage:
 
-        ./ec2-instances-tracker.sh -O <aws-key> -W <aws-secret> [-i <path to save inventory-file>]"
+        Usage: ./ec2-instances-tracker.sh -O <aim-key> -W <aws-secret> [-i <path to save inventory-file> -m <e-mail address to send the inventory file to>]
 
 Output:
 
