@@ -11,11 +11,12 @@
 
 pid_file=/var/run/ec2-instances-tracker.pid
 inventory_file=""
+mail_dest=""
 export JAVA_HOME=/usr/lib/jvm/jre
 export EC2_HOME=/opt/aws/apitools/ec2
 
 function usage () {
-    echo "Usage: $0 -O <aim-key> -W <aws-secret> [-i <path to save inventory-file>]"
+    echo "Usage: $0 -O <aim-key> -W <aws-secret> [-i <path to save inventory-file> -m <e-mail address to send the inventory file to>]"
 }
 
 function get_name_by_instanceid () {
@@ -23,7 +24,7 @@ function get_name_by_instanceid () {
 	name=$(grep $id ${cache_file}.tmp.names | awk '{print $5 " " $6 " " $7}'| sed -e 's/^ *//g' -e 's/ *$//g')
 }
 
-while getopts O:W:i:h flag; do
+while getopts O:W:i:m:h flag; do
 	case $flag in
 	O)
 		key=$OPTARG;
@@ -37,7 +38,10 @@ while getopts O:W:i:h flag; do
 	;;
 	h)
 		usage;
-	exit;
+		exit;
+	;;
+	m)
+		mail_dest=$OPTARG;
 	;;
   esac
 done
@@ -98,8 +102,11 @@ for region in ${aws_regions}; do
 			done
 		fi
 	fi
-
 done
+
+if [ "$mail_dest" != "" ]; then
+	echo "Attached is your EC2 instances report for $(date)" | mutt -a "$inventory_file" -s "ec2-instances-tracker inventory report - $(date)" -- $mail_dest
+fi
 
 logger -s -t ec2-instances-tracker "End pid=$$"
 rm -rf ${pid_file}
