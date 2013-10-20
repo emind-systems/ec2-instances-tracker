@@ -89,7 +89,7 @@ for region in ${aws_regions}; do
 		# Inventory tool
 		if [ "$inventory_file" != "" ]; then
 			${desc_instances} --show-empty-fields --url https://${region} |grep ^TAG |grep -e '\sName\s' > ${cache_file}.tmp.names
-			cat ${cache_file}.tmp | awk '{print $2 "," $10 "," $12}' | sort -d -f > ${cache_file}.inventory
+			cat ${cache_file}.tmp | awk '{print $2 "," $6 "," $10 "," $12}' | sort -d -f > ${cache_file}.inventory
 			cat ${cache_file}.inventory | while read line
 			do
 				my_instance_id=$(echo $line | awk -F',' '{print $1}')
