@@ -1,8 +1,9 @@
 ec2-instances-tracker
-=====================
+The only way to stay in control of your EC2 resources
+=====================================================
 
 1. The script monitors and report EC2 instances status changes, that means that every time it detect a change in the instance state it writes the change to Syslog.
-2. The script also save the entire EC2 inventory to a csv file and can send it by mail
+2. The script also save the entire EC2 inventory to a csv file and can send it by mail, that means that you can configure it to send you an email with all your EC2 servers list
 
 Usage:
 
