@@ -1,7 +1,8 @@
 ec2-instances-tracker
 =====================
 
-A script that monitors EC2 instances changes and write the chnages to Syslog
+1. The script monitors and report EC2 instances status changes, that means that every time it detect a change in the instance state it writes the change to Syslog.
+2. The script also save the entire EC2 inventory to a csv file and can send it by mail
 
 Usage:
 
