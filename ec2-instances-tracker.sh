@@ -21,7 +21,7 @@ function usage () {
 
 function get_name_by_instanceid () {
 	local id=$1
-	name=$(grep $id ${cache_file}.tmp.names | awk '{print $5 " " $6 " " $7}'| sed -e 's/^ *//g' -e 's/ *$//g')
+	name=$(grep $id ${cache_file}.tmp.names | awk '{print substr($0, index($0,$5))}'| sed -e 's/^ *//g' -e 's/ *$//g')
 }
 
 while getopts O:W:i:m:h flag; do
